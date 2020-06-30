@@ -39,44 +39,39 @@ complexVector dft ( complexVector array ) {
 
 int main ( void ) {
 
-    // double signalLength = 1000;
-    // complexVector signal;
-    // signal.reserve(signalLength);
-    // double signalFrequency = 6.30;
-    // double signalPhase = M_PI / 4;
+    double signalLength = 1000;
+    complexVector signal;
+    signal.reserve(signalLength);
+    double signalFrequency = 6.30;
+    double signalPhase = M_PI / 4;
 
-    // for ( double i= 0 ; i < signalLength ; i++ ) {
-    //     double realP = cos ( ( ((2 * M_PI)/ signalLength) * (signalFrequency * static_cast<double>(i)) ) +  signalPhase  );
-    //     signal.push_back ( complexDouble ( realP, 0.000 ) );
-    // }
+    for ( double i= 0 ; i < signalLength ; i++ ) {
+        double realP = cos ( ( ((2 * M_PI)/ signalLength) * (signalFrequency * static_cast<double>(i)) ) +  signalPhase  );
+        realP += cos ( ( ((2 * M_PI)/ signalLength) * ( (double)8.000 * static_cast<double>(i)) ) +  0.000000000  );
+        signal.push_back ( complexDouble ( realP, 0.000 ) );
+    }
 
-    // complexVector result = dft ( signal );
+    complexVector result = dft ( signal );
 
-    // for ( double i = 0; i<70 ; i++ ) {
-    //     std::cout << i/10 << ": "  << std::abs(result[i]) << std::endl;
-    // }
+    std::vector<std::pair<double, double> > freqDomain;
+
+    double plotWidth  = 10; // signalLength
+
+    for ( double i = 0; i < plotWidth ; i++ ) {
+        // std::cout << i/10 << ": "  << std::abs(result[i]) << std::endl;
+        freqDomain.push_back(  std::make_pair( i/10, std::abs(result[i]) ));
+    }
 
     Gnuplot gp;
 
-	std::vector<std::pair<double, double> > xy_pts_A;
-	for(double x=-2; x<2; x+=0.01) {
-		double y = x*x*x;
-		xy_pts_A.push_back(std::make_pair(x, y));
-	}
 
-	std::vector<std::pair<double, double> > xy_pts_B;
-	for(double alpha=0; alpha<1; alpha+=1.0/24.0) {
-		double theta = alpha*2.0*3.14159;
-		xy_pts_B.push_back(std::make_pair(cos(theta), sin(theta)));
-	}
 
-	gp << "set xrange [-2:2]\nset yrange [-2:2]\n";
+	gp << "set xrange [0:"<< plotWidth <<"]\n"; //]\nset yrange ["<< __DBL_MIN__ << ":" << __DBL_MAX__ << "]\n";
 	// Data will be sent via a temporary file.  These are erased when you call
 	// gp.clearTmpfiles() or when gp goes out of scope.  If you pass a filename
 	// (e.g. "gp.file1d(pts, 'mydata.dat')"), then the named file will be created
 	// and won't be deleted (this is useful when creating a script).
-	gp << "plot" << gp.file1d(xy_pts_A) << "with lines title 'cubic',"
-		<< gp.file1d(xy_pts_B) << "with points title 'circle'" << std::endl;
+	gp << "plot" << gp.file1d(freqDomain) << "with lines title 'cubic'," << std::endl;
 
     return(0);
 
