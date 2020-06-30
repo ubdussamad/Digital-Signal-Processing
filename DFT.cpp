@@ -14,8 +14,8 @@ complexVector dft ( complexVector array ) {
     complexVector output;
     output.reserve(N);
 
-    double deltaF = 1;
-    for ( double f = 0 ; f < F ; f+deltaF ) {
+    double deltaF = 0.1;
+    for ( double f = 0 ; f < F ; f+=deltaF ) {
         complexDouble tmp(0,0);
 
         for ( double  n = 0; n < N ; n++ ) {
@@ -37,18 +37,18 @@ int main ( void ) {
     double signalLength = 1000;
     complexVector signal;
     signal.reserve(signalLength);
-    double signalFrequency = 3.000;
-    double signalPhase = 0.000;//M_PI / 4;
+    double signalFrequency = 6.30;
+    double signalPhase = M_PI / 4;
 
-    for ( int i= 0 ; i < signalLength ; i++ ) {
+    for ( double i= 0 ; i < signalLength ; i++ ) {
         double realP = cos ( ( ((2 * M_PI)/ signalLength) * (signalFrequency * static_cast<double>(i)) ) +  signalPhase  );
         signal.push_back ( complexDouble ( realP, 0.000 ) );
     }
 
     complexVector result = dft ( signal );
 
-    for ( int i = 0; i<6 ; i++ ) {
-        
+    for ( double i = 0; i<70 ; i++ ) {
+        std::cout << i/10 << ": "  << std::abs(result[i]) << std::endl;
     }
 
     return(0);
