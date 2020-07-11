@@ -43,14 +43,34 @@ complexVector dft ( complexVector array ) {
     return ( output );
 }
 
-int main ( void ) {
+int main ( int argc, char* argv[] ) {
 
     srand (1873257);
+    // signalFrequency , sample_width, upper_bound, lower_bound, flag, scaling_factor
+    if (argc != 7) {
+        cout << "Incorrect Usage: " << endl;
+        cout << "Signal Frequency | Sample Width | Upper Bound | Lower Bound | Filter Width | Scaling Factor" << endl;
+        cout << endl << "Example:" << endl;
+        cout << "./a.out 4.00 50 0.4 0.4 5 1.00" << endl;
+        return -1;
+    }
+
+    double signalFrequency = atof( argv[1] );
+    int sample_width =       atof( argv[2] );
+    double upperBound =      atof( argv[3] ); //0.6500; // Upper bound Percentage change from average sample.
+    double lowerBound =      atof( argv[4] );//0.6500; // Upper bound Percentage change from average sample.
+    double flag =            atof( argv[5] );//5;
+    double scaling_factor =  atof( argv[6] );//1.0000;
+    
+    double ctr = flag;
+    double local_mean = 0;
+
+
 
     double signalLength = 1000;
     complexVector signal;
     signal.reserve(signalLength);
-    double signalFrequency = 6.30;
+    
     double signalPhase = M_PI;
 
     doubleVector x;
@@ -87,16 +107,10 @@ int main ( void ) {
 
     // z[0] = 0;
     // w[0] = 0;
-    int sample_width = 55;
-    double upperBound = 0.6500; // Upper bound Percentage change from average sample.
-    double lowerBound = 0.6500; // Upper bound Percentage change from average sample.
 
-    double local_mean = 0;
-    double ctr = 5;
-    double scaling_factor = 1.0000;
     for ( int t = 0; t < signalLength ; t++ ) {
 
-        if ( (ctr == 5) & (t+sample_width <= signalLength) ){
+        if ( (ctr == flag) & (t+sample_width <= signalLength) ){
             double avg = 0;
             for ( double j = t; (j < (t+sample_width))   ; j++ ) { avg += y[j]; }
             local_mean = avg / sample_width;
