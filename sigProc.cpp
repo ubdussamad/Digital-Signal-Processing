@@ -6,10 +6,14 @@
 #include <cmath>
 #include <stdlib.h>
 #include <fstream>
+#include <numeric>
+#include <algorithm>
 #include "gnuplot-iostream/gnuplot_i.hpp"
 
 // Complie this using:
 //  g++ -std=c++17 -o lex DFT.cpp -lboost_iostreams -lboost_system -lboost_filesystem
+
+// ./lex 4 30 0.15 0.15 30 36.500 350 0.85 txt // Almost square wave heart rate output
 
 using std::cout;
 using std::endl;
@@ -18,8 +22,9 @@ typedef std::complex <double> complexDouble;
 typedef std::vector <double> doubleVector;
 void wait_for_key ();
 doubleVector  noiseFilter (doubleVector y ,int sample_width,double upperBound,double lowerBound,double averagingStep,double scalingFactor, double verticalPhaseShift );
-complexVector dft (  complexVector array );
-doubleVector  dft ( doubleVector array );
+// complexVector dft (  complexVector array , double dft_scaling_factor = 0.001 );
+doubleVector  dft ( doubleVector array  , double dft_scaling_factor  );
+doubleVector dc_removal ( doubleVector array , double alpha ,  double omegaI);
 
 
 int main ( int argc, char* argv[] ) {
@@ -29,8 +34,8 @@ int main ( int argc, char* argv[] ) {
     
     bool readFile = false;
     std::string fileName;
-    if ( (argc > 7) && (argc <11)) {
-        fileName = argv[8];
+    if ( (argc > 8) && (argc <12)) {
+        fileName = argv[9];
         readFile = true;
     }
 
@@ -43,13 +48,14 @@ int main ( int argc, char* argv[] ) {
     }
 
 
-    double signalFrequency =  atof( argv[1] ); // Frequency of Signal
-    int    sample_width    =  atof( argv[2] ); // Number of Samples to average over
-    double upperBound      =  atof( argv[3] ); //0.6500; // Upper bound Percentage change from average sample.
-    double lowerBound      =  atof( argv[4] );//0.6500; // Upper bound Percentage change from average sample.
-    double avreagingStep   =  atof( argv[5] );//5; // Number of samples to skip before taking a new average
-    double scalingFactor   =  atof( argv[6] );//1.0000; // Scale the filtered signal.
-    double SginalVSft      =  atof( argv[7] );//1.0000; // Vertical Shift the filtered signal.
+    double signalFrequency =  atof( argv[1] );// Frequency of Signal
+    int    sample_width    =  atof( argv[2] );// Number of Samples to average over
+    double upperBound      =  atof( argv[3] );// 0.6500; // Upper bound Percentage change from average sample.
+    double lowerBound      =  atof( argv[4] );// 0.6500; // Upper bound Percentage change from average sample.
+    double avreagingStep   =  atof( argv[5] );// 5; // Number of samples to skip before taking a new average
+    double scalingFactor   =  atof( argv[6] );// 1.0000; // Scale the filtered signal.
+    double SginalVSft      =  atof( argv[7] );// 1.0000; // Vertical Shift the filtered signal.
+    double omega           =  atof( argv[8] );// 0.9000; // Omega Value
 
     
     std::string myText;
@@ -81,7 +87,7 @@ int main ( int argc, char* argv[] ) {
     doubleVector y;
     doubleVector ref;
 
-
+    // Signal Genrator
     // for ( double i= 0 ; i < signalLength ; i++ ) {
     //     double noise_coeff = rand() % 20 + 1; // Inserting random pahse noise.
     //     double realP = sin ( ( ((2 * M_PI)/ signalLength) * (signalFrequency * static_cast<double>(i)) ) +  (signalPhase/noise_coeff)  );
@@ -92,17 +98,25 @@ int main ( int argc, char* argv[] ) {
     //     y.push_back(realP);
     // }
 
-    doubleVector z = noiseFilter ( siGy,  sample_width, upperBound,
+    doubleVector z = dc_removal ( siGy , omega , 0.0);
+
+    cout << "Length of z before DC removal: " <<  z.size() << endl;
+
+
+    z = noiseFilter ( z,  sample_width, upperBound,
                              lowerBound, avreagingStep, scalingFactor , SginalVSft );
 
-    doubleVector frequencyDomain = dft ( z );
-    frequencyDomain = noiseFilter ( frequencyDomain,  sample_width, upperBound,
-                             lowerBound, avreagingStep, scalingFactor , SginalVSft );
+    cout << "Length of z before DC removal: " <<  z.size() << endl;
+
+    doubleVector frequencyDomain = dft ( z , 0.01);
+    // frequencyDomain = noiseFilter ( frequencyDomain,  sample_width, upperBound,
+    //                          lowerBound, avreagingStep, scalingFactor , SginalVSft );
     
+    cout << "Frequency: " <<  std::max_element( frequencyDomain.begin() , frequencyDomain.end() ) - frequencyDomain.begin() << "Hz" << endl;
 
     Gnuplot g1("lines");
     g1.set_grid();
-    g1.set_style("lines").plot_xy(siGx, siGy,            "Noisey Sginal");
+    // g1.set_style("lines").plot_xy(siGx, siGy,            "Noisey Sginal");
     g1.set_style("lines").plot_xy(siGx, z,               "Filtered Signal");
     g1.set_style("lines").plot_xy(siGx, frequencyDomain, "DFT");
     g1.reset_plot();
@@ -159,33 +173,25 @@ doubleVector noiseFilter ( doubleVector y, int sample_width,double upperBound,do
 }
 
 
-complexVector dft ( complexVector array ) {
-    double N = array.size();
-    double F = N;
-
-    complexVector output;
-    output.reserve(N);
-
-    double deltaF = 1;
-    for ( double f = 0 ; f < F ; f+=deltaF ) {
-        complexDouble tmp(0,0);
-
-        for ( double  n = 0; n < N ; n++ ) {
-            double realMul = cos((2*M_PI*f*n)/N);
-            double imagMul = sin((2*M_PI*f*n)/N);
-
-            complexDouble z ( realMul , -imagMul );
-            tmp += array[n] * z;
-        }
-
-        output.push_back(tmp);
+doubleVector dc_removal ( doubleVector array , double alpha ,  double omegaI ) {
+    doubleVector omega;
+    omega.push_back ( omegaI );
+    for ( int i = 0x0 ; i < array.size() ; i++ ) {
+        omega.push_back ( array[i] + alpha * (omega.back()) );
     }
 
-    return ( output );
+    doubleVector reduX;
+    reduX.push_back(omegaI);
+    for ( int i = 0x1 ; i < array.size() ; i++ ) {
+        reduX.push_back ( omega[i] - omega[i-1] );
+    }
+
+
+
+    return reduX;
 }
 
-
-doubleVector dft ( doubleVector array ) {
+doubleVector dft ( doubleVector array , double dft_scaling_factor ) {
     double N = array.size();
     double F = N;
 
@@ -204,7 +210,7 @@ doubleVector dft ( doubleVector array ) {
             tmp += array[n] * z;
         }
 
-        output.push_back( std::abs (tmp) * 0.0001 );
+        output.push_back( std::abs (tmp) * dft_scaling_factor );
     }
 
     return ( output );
