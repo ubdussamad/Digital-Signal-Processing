@@ -109,8 +109,8 @@ int main ( int argc, char* argv[] ) {
     cout << "Length of z before DC removal: " <<  z.size() << endl;
 
     doubleVector frequencyDomain = dft ( z , 0.01);
-    // frequencyDomain = noiseFilter ( frequencyDomain,  sample_width, upperBound,
-    //                          lowerBound, avreagingStep, scalingFactor , SginalVSft );
+    frequencyDomain = noiseFilter ( frequencyDomain,  sample_width, upperBound,
+                             lowerBound, avreagingStep, scalingFactor , SginalVSft );
     
     cout << "Frequency: " <<  std::max_element( frequencyDomain.begin() , frequencyDomain.end() ) - frequencyDomain.begin() << "Hz" << endl;
 
