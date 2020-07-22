@@ -22,7 +22,7 @@ typedef std::complex <double> complexDouble;
 typedef std::vector <double> doubleVector;
 void wait_for_key ();
 doubleVector  noiseFilter (doubleVector y ,int sample_width,double upperBound,double lowerBound,double averagingStep,double scalingFactor, double verticalPhaseShift );
-// complexVector dft (  complexVector array , double dft_scaling_factor = 0.001 );
+complexVector dft (  complexVector array , double dft_scaling_factor = 0.001 );
 doubleVector  dft ( doubleVector array  , double dft_scaling_factor  );
 doubleVector dc_removal ( doubleVector array , double alpha ,  double omegaI);
 
@@ -55,7 +55,7 @@ int main ( int argc, char* argv[] ) {
     double avreagingStep   =  atof( argv[5] );// 5; // Number of samples to skip before taking a new average
     double scalingFactor   =  atof( argv[6] );// 1.0000; // Scale the filtered signal.
     double SginalVSft      =  atof( argv[7] );// 1.0000; // Vertical Shift the filtered signal.
-    double omega           =  atof( argv[8] );// 0.9000; // Omega Value
+    double omega           =  atof( argv[8] );// 0.9000; // Omega Value.
 
     
     std::string myText;
@@ -74,8 +74,6 @@ int main ( int argc, char* argv[] ) {
         }
     MyReadFile.close(); 
     }
-
-
 
 
     double signalLength = 1000;
@@ -109,14 +107,14 @@ int main ( int argc, char* argv[] ) {
     cout << "Length of z before DC removal: " <<  z.size() << endl;
 
     doubleVector frequencyDomain = dft ( z , 0.01);
-    frequencyDomain = noiseFilter ( frequencyDomain,  sample_width, upperBound,
-                             lowerBound, avreagingStep, scalingFactor , SginalVSft );
+    // frequencyDomain = noiseFilter ( frequencyDomain,  sample_width, upperBound,
+    //                          lowerBound, avreagingStep, scalingFactor , SginalVSft );
     
     cout << "Frequency: " <<  std::max_element( frequencyDomain.begin() , frequencyDomain.end() ) - frequencyDomain.begin() << "Hz" << endl;
 
     Gnuplot g1("lines");
     g1.set_grid();
-    // g1.set_style("lines").plot_xy(siGx, siGy,            "Noisey Sginal");
+    g1.set_style("lines").plot_xy(siGx, siGy,         "Noisey Sginal");
     g1.set_style("lines").plot_xy(siGx, z,               "Filtered Signal");
     g1.set_style("lines").plot_xy(siGx, frequencyDomain, "DFT");
     g1.reset_plot();
@@ -155,7 +153,7 @@ doubleVector noiseFilter ( doubleVector y, int sample_width,double upperBound,do
 
     for ( int t = 0; t < signalLength ; t++ ) {
 
-        if ( (ctr == averagingStep) & (t+sample_width <= signalLength) ){
+        if ( (ctr == averagingStep) & (t+sample_width <= signalLength) ) {
             double avg = 0;
             for ( double j = t; (j < (t+sample_width))   ; j++ ) { avg += y[j]; }
             local_mean = avg / sample_width;
