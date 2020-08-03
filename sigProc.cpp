@@ -62,7 +62,9 @@ int main ( int argc, char* argv[] ) {
     doubleVector siGx;
     doubleVector siGy;
     double counter = 0;
+
     if ( readFile ) {
+    cout << "Reading Signal data from file." << endl;
     std::ifstream MyReadFile(fileName);
     while (getline (MyReadFile, myText)) {
         double i = atof( myText.c_str() );
@@ -73,6 +75,9 @@ int main ( int argc, char* argv[] ) {
             }
         }
     MyReadFile.close(); 
+    }
+    else { 
+        cout << "Genrating Random signal internally to test the filter." <<  endl;
     }
 
 
@@ -170,17 +175,16 @@ doubleVector noiseFilter ( doubleVector y, int sample_width,double upperBound,do
     return ( z );
 }
 
-
 doubleVector dc_removal ( doubleVector array , double alpha ,  double omegaI ) {
     doubleVector omega;
     omega.push_back ( omegaI );
-    for ( int i = 0x0 ; i < array.size() ; i++ ) {
+    for ( unsigned int i = 0x0 ; i < array.size() ; i++ ) {
         omega.push_back ( array[i] + alpha * (omega.back()) );
     }
 
     doubleVector reduX;
     reduX.push_back(omegaI);
-    for ( int i = 0x1 ; i < array.size() ; i++ ) {
+    for ( unsigned int i = 0x1 ; i < array.size() ; i++ ) {
         reduX.push_back ( omega[i] - omega[i-1] );
     }
 
