@@ -9,19 +9,25 @@
 #include <numeric>
 #include <algorithm>
 
-typedef std::vector <std::complex <double>> complexVector_t;
-typedef std::complex <double>               complexDouble_t;
-typedef std::vector <double>                doubleVector_t;
 
 
-template < class T >
+
+
+template < typename signalArraytype>
+using  complexSignalVector_t  = std::vector <std::complex < signalArraytype >>;
+template < typename signalArraytype>
+using  signalVector_t   = std::complex < signalArraytype >;
+
+
+template < typename signalArraytype>
 class dsp {
 
 private:
     double dummySignalFrequency; // =  atof( argv[1] );// Frequency of Signal
     
     bool enableDebugLog = false;
-    T* signalPointer = NULL; // This is a pointer to the main signal, which is store on heap.
+
+    complexSignalVector_t* signalPointer = NULL; // This is a pointer to the main signal, which is store on heap.
     
     int    sample_width;    // =  atof( argv[2] );// Number of Samples to average over
     double upperBound;      // =  atof( argv[3] );// 0.6500; // Upper bound Percentage change from average sample.
@@ -34,10 +40,18 @@ private:
     
 public:
 
-    void LOG ( T message , short level = 3 );
-    dsp( const doubleVector_t&  signal );
-    dsp( const complexVector_t& signal );
-    dsp( T*    signal , int length  );
+    void LOG ( std::string message , short level );
+
+    
+    dsp( const signalVector_t&        signal );
+    dsp( const complexSignalVector_t& signal );
+    dsp( const signalArraytype*       signal, T length  );
+
+    ~dsp (void)  {
+        if (signalPointer != NULL) {
+            delete signalPointer;
+        }
+    }
 
     doubleVector_t  noiseFilter ();
     complexVector_t dft ( complexVector_t signal );
