@@ -8,10 +8,7 @@
 #include <fstream>
 #include <numeric>
 #include <algorithm>
-
-
-
-
+#include <ctime>
 
 template < typename signalArraytype>
 using  complexSignalVector_t  = std::vector <std::complex < signalArraytype >>;
@@ -23,41 +20,37 @@ template < typename signalArraytype>
 class dsp {
 
 private:
-    double dummySignalFrequency; // =  atof( argv[1] );// Frequency of Signal
+    double dummySignalFrequency; // Frequency of Signal.
     
-    bool enableDebugLog = false;
+    // Display all Log messages irrespective of the level.
+    bool enableDebugLog = true;
 
-    complexSignalVector_t* signalPointer = NULL; // This is a pointer to the main signal, which is store on heap.
+    // This is a pointer to the main signal, which might of might not be stored on heap.
+    complexSignalVector_t<signalArraytype> inputSignal;
     
-    int    sample_width;    // =  atof( argv[2] );// Number of Samples to average over
-    double upperBound;      // =  atof( argv[3] );// 0.6500; // Upper bound Percentage change from average sample.
-    double lowerBound;      // =  atof( argv[4] );// 0.6500; // Upper bound Percentage change from average sample.
-    double avreagingStep;   // =  atof( argv[5] );// 5; // Number of samples to skip before taking a new average
-    double scalingFactor;   // =  atof( argv[6] );// 1.0000; // Scale the filtered signal.
-    double SginalVSft;      // =  atof( argv[7] );// 1.0000; // Vertical Shift the filtered signal.
+    int    sample_width;    // Number of Samples to average over.
+    double upperBound;      // Upper bound Percentage change from average sample.
+    double lowerBound;      // Upper bound Percentage change from average sample.
+    double avreagingStep;   // Number of samples to skip before taking a new average.
+    double scalingFactor;   // Scale the filtered signal.
+    double SginalVSft;      // Vertical Shift the filtered signal.
     
-    double omega;           // =  atof( argv[8] );// 0.9000; // Omega Value.
+    double omega;           // 0.9000; // Omega Value.
     
 public:
 
     void LOG ( std::string message , short level );
 
-    
-    dsp( const signalVector_t&        signal );
-    dsp( const complexSignalVector_t& signal );
-    dsp( const signalArraytype*       signal, T length  );
+    dsp( const complexSignalVector_t<signalArraytype>& signal ); 
+    dsp( const signalVector_t<signalArraytype>&        signal );
+    dsp( const signalArraytype*       signal, int length  );
 
-    ~dsp (void)  {
-        if (signalPointer != NULL) {
-            delete signalPointer;
-        }
-    }
+    complexSignalVector_t<signalArraytype> dsp <signalArraytype> :: dft ( const signalArraytype sweepDelta );
 
-    doubleVector_t  noiseFilter ();
-    complexVector_t dft ( complexVector_t signal );
-    doubleVector_t  dft ( doubleVector_t signal );
-    doubleVector_t dc_removal ();
-    void wait_for_key ();
+    // doubleVector_t  noiseFilter ();
+    // complexVector_t dft ( complexVector_t signal );
+    // doubleVector_t  dft ( doubleVector_t signal );
+    // doubleVector_t dc_removal ();
 };
 
 

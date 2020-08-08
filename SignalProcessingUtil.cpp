@@ -1,43 +1,51 @@
 #include "SignalProcessingUtil.hpp"
 
-template < typename SignalType >
-void dsp <SignalType> :: LOG ( std::string message , short level ) {
-    if ( this->enableDebugLog || (level == 1)) {
-    std::cout << "Level: 3 | Info: " << message << std::endl;
+
+template < typename signalArraytype>
+void dsp<signalArraytype>::LOG ( std::string message , short level ) {
+    if (level == 1 || enableDebugLog ) {
+        std::cout << std::time(0) << ": " << message << std::endl;
     }
 }
 
 
-// template < typename  T >
-// dsp <T> ::dsp ( const doubleVector_t&  signal ) {
-//     signalPointer = new doubleVector_t;
-//     LOG ("Loaded Double Vector Signal.")
-
-// }
-
-template < typename  T >
-dsp <T> :: dsp ( T* signal , T length  ) {
-    signalPointer = new complexVector_t;
-    signalPointer->reserve(length);
-    for ( T i = 0 ; i < length ; i++ ) {
-        signalPointer->push_back (*signal);
-        // LOG ( *signal , 1);
-        std::cout << *signal << std::endl;
-        signal++;
-    }
-    // LOG ("Loaded Double Vector Signal." , 1);
-    std::cout << "Loaded Double Vector" << std::endl;
-
+template < typename signalArraytype>
+dsp <signalArraytype> :: dsp( const complexSignalVector_t<signalArraytype>& signal ) :
+    inputSignal(signal) {
+        LOG("SignalObj Instanciated, type: Complex Vector <T> " , 3);
 }
 
-
-int main ( void ) {
-    std::cout << "Initializing......" << std::endl;
-    float list[5] = { 1, 2, 3, 4, 5};
-    auto instance = dsp<float>( list , 5 );
+template < typename signalArraytype>
+dsp <signalArraytype> :: dsp( const signalVector_t<signalArraytype>& signal ) {
     
-    return(0);
+}
 
+template < typename signalArraytype >
+complexSignalVector_t<signalArraytype> dsp <signalArraytype> :: dft ( const signalArraytype sweepDelta ) {
+    const double N = inputSignal.size();
+    double F = N;
+    complexSignalVector_t<signalArraytype> output;
+    output.reserve(N);
+
+    for ( signalArraytype f = 0 ; f < F ; f+=sweepDelta ) {
+        std::complex < signalArraytype > tmp(0,0);
+
+        for ( signalArraytype  n = 0; n < N ; n++ ) {
+            double realMul = cos((2*M_PI*f*n)/N);
+            double imagMul = sin((2*M_PI*f*n)/N);
+            std::complex < signalArraytype > z ( realMul , -imagMul );
+            tmp += array[n] * z;
+        }
+
+        output.push_back( tmp * dft_scaling_factor );
+    }
+
+    return ( output );
 }
 
 
+int main () {
+    complexSignalVector_t<double> siG;
+    dsp<double> x( siG );
+    return(0);
+}
