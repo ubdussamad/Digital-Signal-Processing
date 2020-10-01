@@ -1,36 +1,42 @@
 #include <iostream>
+#include <memory>
+#include <thread>
+#include <chrono>
 
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <unistd.h>
+#endif
 
+// class x { 
+//     public:
+//         x () {
+//             std::cout << "Constructor Called!" << std::endl;
+//         }
+//         ~x() {
+//             std::cout <<  "Destructor called!" << std::endl;
+//         }
+//         void print() {};
+// };
 
-class Base {
-    public:
-        int a;
-    protected:
-        int b;
-    private:
-        int c;
-};
-/* this is is class and it s is fervied form a base class. */
-class Derived : public Base {
-    
-    int getA ( void ) {
-        return this->a;
+// std::shared_ptr<x> fn () {
+//     std::shared_ptr<x> rval = std::make_shared<x>();
+//     return rval;
+// }
+
+void fillRing ( void ) {
+    while (1) {
+        sleep(5);
+        std::cout << "Hey ya'll, sup?\n";
+    }
+}
+
+int main ( void ) {
+    std::thread ringBufferThread(fillRing);
+    while (1) {
+    sleep(2);
+    std::cout << "Nothing much, hbu?\n";
     }
     
-    int getB ( void ) {
-        return this->b;
-    }
-
-    int getC (void) {
-        return this->c;
-    }
-
-    
-};
-
-int main ( ) {
-    Derived x;
-    x.a = 2;
-    x.b = 3;
-    x.c = 4;
 }
