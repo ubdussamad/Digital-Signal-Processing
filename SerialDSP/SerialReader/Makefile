@@ -1,6 +1,7 @@
 # Built by refrencing to: https://interrupt.memfault.com/blog/best-and-worst-gcc-clang-compiler-flags
 # Author: ubdussamad <ubdussamad@gmail.com>
 CC	=	g++
+CC_STD = -std=c++17
 
 CSTACKUSG = -fstack-usage #C_STACK_USAGE_MONITORING
 CCW = -Weverything #CROSS_COMPILER_WARININGS
@@ -16,15 +17,15 @@ COPTIMIZATIONS	=	-o3
 
 
 
-# lex: SerialReader.o
-# 	$(CC) $(CFLAGS) $(COPTIMIZATIONS) SerialReader.o -o lex
-# 	rm *.o
+lex: SerialReader.o
+	$(CC) $(CFLAGS) $(CC_STD) $(COPTIMIZATIONS) SerialReader.o -o lex
+	rm *.o
 
-# SerialReader.o : SerialReader.cpp
-# 	$(CC) $(CFLAGS) $(COPTIMIZATIONS) -c SerialReader.cpp
+SerialReader.o : SerialReader.cpp
+	$(CC) $(CFLAGS) $(CC_STD) $(COPTIMIZATIONS) -c SerialReader.cpp
 
 generic : SerialReaderGeneric.cpp
-	$(CC) $(CFLAGS) $(COPTIMIZATIONS) SerialReader.cpp -o lexg
+	$(CC) $(CFLAGS) $(CC_STD) $(COPTIMIZATIONS) SerialReader.cpp -o lexg
 
 clean : 
 	rm le* *.o

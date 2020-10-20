@@ -50,12 +50,12 @@ int x() {
   // tty.c_oflag &= ~OXTABS; // Prevent conversion of tabs to spaces (NOT PRESENT ON LINUX)
   // tty.c_oflag &= ~ONOEOT; // Prevent removal of C-d chars (0x004) in output (NOT PRESENT ON LINUX)
 
-  tty.c_cc[VTIME] = 10;    // Wait for up to 1s (10 deciseconds), returning as soon as any data is received.
+  tty.c_cc[VTIME] =20;    // Wait for up to 1s (10 deciseconds), returning as soon as any data is received.
   tty.c_cc[VMIN] = 0; // Default infile buffer witdh is likely to be 16bytes
 
   // Set in/out baud rate to be 9600
-  cfsetispeed(&tty, B9600);
-  cfsetospeed(&tty, B9600);
+  cfsetispeed(&tty, B115200);
+  cfsetospeed(&tty, B115200);
 
   // Save tty settings, also checking for error
   if (tcsetattr(serial_port, TCSANOW, &tty) != 0) {
@@ -68,18 +68,23 @@ int x() {
 int main() {
 
     x();
-    char read_buf [128];
+    char read_buf [8005];
+
+    while (1) {
     memset(&read_buf, '\0', sizeof(read_buf));
-
     int num_bytes = read(serial_port, &read_buf, sizeof(read_buf));
-
 
     if (num_bytes < 0) {
         printf("Error reading: %s", strerror(errno));
         return 1;
     }
 
-    printf("Read %i bytes. Received message: %s", num_bytes, read_buf);
+    printf("Read %i bytes. Received message: %s \n", num_bytes, read_buf);
+    printf("Sleeping.....\n");
+    sleep(1);
+    printf("Woken up!\n");
+    
+    }
 
     close(serial_port);
 }
