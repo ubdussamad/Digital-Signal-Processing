@@ -8,19 +8,27 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->plot->addGraph();
-//    ui->plot->graph(0)->setScatterStyle(QCPScatterStyle::ssDot);
-//    ui->plot->graph(0)->setLineStyle(QCPGraph::lsNone);
     ui->plot->yAxis->setLabel("Value");
     ui->plot->xAxis->setLabel("timeBase");
-    ui->plot->xAxis->setRange(0, 100);
-    ui->plot->yAxis->setRange(-50, 1);
-    for ( this->counter = 0; this->counter < 100;  this->counter++ ) {
+    ui->plot->xAxis->setRange(0, 300);
+    ui->plot->yAxis->setRange(-5, 5);
+    for ( this->counter = 0; this->counter < 300;  this->counter++ ) {
         this->qv_x.append(this->counter);
+     }
+
+    this->sr = new serialReader("/dev/ttyACM0", 00);
+    if ( this->sr->setSerialProperties(115200,true,0,0) ) {
+        this->init_flag = false;
       }
+    else{
+        this->init_flag  =true;
+      }
+
+
     srand (time(NULL));
     this->graphUpdateTimer  = new QTimer(this);
     connect( graphUpdateTimer, SIGNAL(timeout()), this, SLOT(doTheDoogie()) );
-    this->graphUpdateTimer->start(10);
+    this->graphUpdateTimer->start(20);
 
 
 }
@@ -31,49 +39,34 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::addPoint(double x,double y) {
-//    LOG "Add point called!\n\n";
-    this->qv_y.append_(y);
-//    this->qv_x.append_(x);
-//    LOG "Data appended.\n\n";
+  this->qv_y.append_(y);
     if (this->graphMAX < y) {
         this->graphMAX = y;
         this->plotRangeChanged = true;
     }
     else { this->plotRangeChanged = false;}
-
     // On every chage , if the FIFO buffer is full just delete the last element add add new one.
-
-
 }
 
 void MainWindow::clrData(){}
 
 void MainWindow::on_btnPlot_clicked()
 {
-//    LOG "button clicked!\n\n";
-    addPoint( 0, rand() % 100 + 1  );
-//    LOG "Add point exited!\n\n";
-    ui->plot->graph(0)->setData(qv_x , qv_y);
-    if (this->plotRangeChanged) {
-        ui->plot->yAxis->setRange(-10, this->graphMAX + (0.8*this->graphMAX));
-        this->plotRangeChanged = false;
-    }
-    ui->plot->replot();
-    ui->plot->update();
+
+  ui->plot->yAxis->setRange( ui->spinX->value(),ui->spinY->value());
 }
 
 void MainWindow::doTheDoogie() {
-//  LOG "button clicked!\n\n";
-//  addPoint( 0, rand() % 100 + 1  );
-//  LOG "Add point exited!\n\n";
-//  ui->plot->graph(0)->setData(qv_x , qv_y);
-//  if (this->plotRangeChanged) {
-//      ui->plot->yAxis->setRange(-10, this->graphMAX + (0.2*this->graphMAX));
-//      this->plotRangeChanged = false;
-//  }
-//  ui->plot->replot();
-//  ui->plot->update();
-  this->on_btnPlot_clicked();
+  char cxr[1024];
+  this->sr->readSerial(cxr , 1024);
+  addPoint( 0, atof(cxr) );
+  ui->plot->graph(0)->setData(qv_x , qv_y);
+  if (this->plotRangeChanged) {
+//      ui->plot->yAxis->setRange(-5, this->graphMAX + (0.8*this->graphMAX));
+      this->plotRangeChanged = false;
+  }
+  ui->plot->replot();
+  ui->plot->update();
 }
 
 void MainWindow::on_btnClr_clicked(){}

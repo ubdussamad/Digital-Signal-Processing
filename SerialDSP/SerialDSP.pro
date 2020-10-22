@@ -14,10 +14,13 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    qcustomplot.cpp
+        qcustomplot.cpp \
+        SerialReader/SerialReader.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
-    fifo.h
+    fifo.h \
+    SerialReader/SerialReader.hpp \
+    SerialReader/logX.hpp
 
 FORMS    += mainwindow.ui

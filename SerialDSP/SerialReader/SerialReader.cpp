@@ -7,51 +7,16 @@
  */
 
 
-// C library headers
-#include <stdio.h>
-#include <string.h>
-#include <cstdlib>
-#include <typeinfo>
+
+#include "SerialReader.hpp"
 #include <iostream>
 
 
-// lOGGING
-#define SHELL_BASH      0
-#define DEBUG           1
-// #define ENABLE_WARNING  0
-// #define ENABLE_INFO     0
-// #define ENABLE_ERROR    0
-// #define ENABLE_SPECIAL  0
-#include "logX.hpp"
 
-// Linux headers
-#include <fcntl.h> // Contains file controls like O_RDWR
-#include <errno.h> // Error integer and strerror() function
-#include <termios.h> // Contains POSIX terminal control definitions
-#include <unistd.h> // write(), read(), close()
-// #include "CircularBuffer/CircularBuffer.h"
-
-
-
-class serialReader {
-
-    public:
-        serialReader( const char * file_ , int accessFlag );
-        int  setSerialProperties ( int baudrate, bool readintilllineEnds = false,unsigned int vtime = 60,unsigned int vmin = 4 );
-        
-        int readNumericBuffer(int* buffer,unsigned int valueCount,unsigned int maxReads = 5,size_t strBufferSize = 4);
-
-    protected:
-        int serialDesc;    // Serial port file descriptor.
-        const char * file;
-        struct termios tty; // Declaring the tty struct
-
-        // MSB -> NU, NU, NU, NU, NU, Error writing temios struct for fd, Error reading termios struct for fd , Error Opening File descritor.
-        short errcode = 0b00000000;
-};
 
 serialReader::serialReader ( const char *  file_, int accessFlag = O_RDONLY ) : file(file_)
 {
+    this->errcode = 0b00000000;
     this->serialDesc = open(file_, accessFlag );
     X_INFO("Reading Port: ");
     X_PRINTF("%s\n" , file_);
@@ -95,8 +60,9 @@ int serialReader::setSerialProperties ( int baudrate, bool readTilllineEnds, uns
         // TODO: Change this setting to manipulate data.
         this->tty.c_cc[VTIME] = (unsigned char)vtime;    // Wait for up to 0.5s (5 deciseconds), returning as soon as any data is received.
         this->tty.c_cc[VMIN] =  (unsigned char)vmin; // Wait (block) till atleast 5 character are recived and then release 
-        cfsetispeed(&this->tty,  baudrate);
-        cfsetospeed(&this->tty,  baudrate);
+        cfsetispeed(&this->tty,  B115200);//baudrate);
+        cfsetospeed(&this->tty,  B115200);//baudrate);
+        X_ERROR("Setting baudrate to: %d" , baudrate);
         // Save this->tty settings, also checking for error
         if (tcsetattr(this->serialDesc, TCSANOW, &this->tty) != 0) {
             this->errcode |= 0b00000100;
@@ -107,34 +73,72 @@ int serialReader::setSerialProperties ( int baudrate, bool readTilllineEnds, uns
 
     }
 
-int serialReader::readNumericBuffer(int* buffer, unsigned int valueCount, unsigned int maxReads, size_t strBufferSize) {
-    char read_buf [strBufferSize];
+int serialReader::readNumericBuffer(double* buffer, unsigned int valueCount,
+                                    unsigned int maxReads, size_t strBufferSize) {
+    char read_buf [strBufferSize+1];
     int reads = valueCount;
-    X_INFO("Reading BUffer...\n");
-    while (maxReads--) {
+//    std::cout << "Reading from Serial....\n" << std::endl;
+    while (maxReads) {
         memset(&read_buf, '\0', strBufferSize);
+//        std::cout << "Read blocked!\n" << std::endl;
         size_t num_bytes = read( this->serialDesc , &read_buf, strBufferSize);
-        if (num_bytes < 0U) {continue;}
-        int i = std::atoi(read_buf);
-        if (i != -1) {buffer[valueCount--] = i;}
+//        std::cout << "Read Released." << std::endl;
+        // if (!num_bytes) {continue;}
+        // std::cout << maxReads << "|Read buffer is: " << read_buf << "\n|";
+        double bvalue = std::atof(read_buf);
+        double zero = 0;
+        if (bvalue != zero) {valueCount--;buffer[valueCount] = bvalue;}
+            //    std::cout << "\n" <<  maxReads << " Value: " << bvalue << std::endl;
+
+        maxReads--;
     }
     close(this->serialDesc);
+//    std::cout << "Done reading Serial!\n" << std::endl;
     return reads-valueCount;
 }
 
+void serialReader::fillNumBuffer (double * numBuffer , char * charBuffer , int count ) {
+    size_t num_bytes = 0;
 
-
-int main (  void  ) {
-    serialReader sr("/dev/ttyACM0");
-    if (sr.setSerialProperties(115200,true,10,6)) {
-        X_ERROR("Error configuring file.\n");
-        return(0);
+    while (count) {
+        memset(charBuffer , '\0' ,1024);
+        num_bytes = read( this->serialDesc , charBuffer, count);
     }
-    int buff[16];
-    sr.readNumericBuffer(buff, 15 , 20 , 20);
-
-    for ( int i =0; i <16; i++) {
-        X_PRINTF("%d\n" , buff[i]);
-    }
-
+    
 }
+
+size_t serialReader::readSerial(char * buffer , size_t size) {
+    memset(buffer ,'\0',size);
+    return read( this->serialDesc , buffer, size);
+}
+
+// int main (  void  ) {
+//     serialReader sr("/dev/ttyACM0");
+//     if (sr.setSerialProperties(115200,true,1,6)) {
+//         X_ERROR("Error configuring file.\n");
+//         return(0);
+//     }
+//     char buff[8];
+//     X_INFO("Hi");
+//     std::cout << std::endl;
+//     memset(buff, '\0', 8);
+//     while (1)
+//     {
+//         sr.fillCharBuffer(buff , 8);
+//         std::cout << "-------\n" << buff << "-------\n" << std::endl;
+//     }
+    
+
+
+    // while (1) {
+    //     sleep(1);
+    //     sr.readNumericBuffer(buff, 2 , 2 , 20);
+
+    //     for ( int i =0; i <2; i++) {
+    //         X_PRINTF("%d: %f" , i,buff[i]);
+    //         std::cout << std::endl;
+    //     }
+
+    //     std::cout << "Buffer ends here...." << std::endl;
+    // }
+//}

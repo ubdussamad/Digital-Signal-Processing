@@ -50,11 +50,13 @@ OBJECTS_DIR   = ./
 
 SOURCES       = ../SerialDSP/main.cpp \
 		../SerialDSP/mainwindow.cpp \
-		../SerialDSP/qcustomplot.cpp moc_mainwindow.cpp \
+		../SerialDSP/qcustomplot.cpp \
+		../SerialDSP/SerialReader/SerialReader.cpp moc_mainwindow.cpp \
 		moc_qcustomplot.cpp
 OBJECTS       = main.o \
 		mainwindow.o \
 		qcustomplot.o \
+		SerialReader.o \
 		moc_mainwindow.o \
 		moc_qcustomplot.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
@@ -115,9 +117,12 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/lex.prf \
 		../SerialDSP/SerialDSP.pro ../SerialDSP/mainwindow.h \
 		../SerialDSP/qcustomplot.h \
-		../SerialDSP/fifo.h ../SerialDSP/main.cpp \
+		../SerialDSP/fifo.h \
+		../SerialDSP/SerialReader/SerialReader.hpp \
+		../SerialDSP/SerialReader/logX.hpp ../SerialDSP/main.cpp \
 		../SerialDSP/mainwindow.cpp \
-		../SerialDSP/qcustomplot.cpp
+		../SerialDSP/qcustomplot.cpp \
+		../SerialDSP/SerialReader/SerialReader.cpp
 QMAKE_TARGET  = SerialDSP
 DESTDIR       = #avoid trailing-slash linebreak
 TARGET        = SerialDSP
@@ -285,8 +290,8 @@ dist: distdir FORCE
 distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
-	$(COPY_FILE) --parents ../SerialDSP/mainwindow.h ../SerialDSP/qcustomplot.h ../SerialDSP/fifo.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../SerialDSP/main.cpp ../SerialDSP/mainwindow.cpp ../SerialDSP/qcustomplot.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../SerialDSP/mainwindow.h ../SerialDSP/qcustomplot.h ../SerialDSP/fifo.h ../SerialDSP/SerialReader/SerialReader.hpp ../SerialDSP/SerialReader/logX.hpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../SerialDSP/main.cpp ../SerialDSP/mainwindow.cpp ../SerialDSP/qcustomplot.cpp ../SerialDSP/SerialReader/SerialReader.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../SerialDSP/mainwindow.ui $(DISTDIR)/
 
 
@@ -313,7 +318,9 @@ compiler_rcc_clean:
 compiler_moc_header_make_all: moc_mainwindow.cpp moc_qcustomplot.cpp
 compiler_moc_header_clean:
 	-$(DEL_FILE) moc_mainwindow.cpp moc_qcustomplot.cpp
-moc_mainwindow.cpp: ../SerialDSP/fifo.h \
+moc_mainwindow.cpp: ../SerialDSP/SerialReader/SerialReader.hpp \
+		../SerialDSP/SerialReader/logX.hpp \
+		../SerialDSP/fifo.h \
 		../SerialDSP/mainwindow.h
 	/usr/lib/x86_64-linux-gnu/qt5/bin/moc $(DEFINES) -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I/home/samad/Work/fft/SerialDSP -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtPrintSupport -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I. -I/usr/include/c++/5 -I/usr/include/x86_64-linux-gnu/c++/5 -I/usr/include/c++/5/backward -I/usr/lib/gcc/x86_64-linux-gnu/5/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../SerialDSP/mainwindow.h -o moc_mainwindow.cpp
 
@@ -326,7 +333,7 @@ compiler_uic_make_all: ui_mainwindow.h
 compiler_uic_clean:
 	-$(DEL_FILE) ui_mainwindow.h
 ui_mainwindow.h: ../SerialDSP/mainwindow.ui \
-		qcustomplot.h
+		../SerialDSP/qcustomplot.h
 	/usr/lib/x86_64-linux-gnu/qt5/bin/uic ../SerialDSP/mainwindow.ui -o ui_mainwindow.h
 
 compiler_yacc_decl_make_all:
@@ -340,17 +347,24 @@ compiler_clean: compiler_moc_header_clean compiler_uic_clean
 ####### Compile
 
 main.o: ../SerialDSP/main.cpp ../SerialDSP/mainwindow.h \
+		../SerialDSP/SerialReader/SerialReader.hpp \
+		../SerialDSP/SerialReader/logX.hpp \
 		../SerialDSP/fifo.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../SerialDSP/main.cpp
 
 mainwindow.o: ../SerialDSP/mainwindow.cpp ../SerialDSP/mainwindow.h \
+		../SerialDSP/SerialReader/SerialReader.hpp \
+		../SerialDSP/SerialReader/logX.hpp \
 		../SerialDSP/fifo.h \
-		ui_mainwindow.h \
-		qcustomplot.h
+		ui_mainwindow.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mainwindow.o ../SerialDSP/mainwindow.cpp
 
-qcustomplot.o: ../SerialDSP/qcustomplot.cpp qcustomplot.h
+qcustomplot.o: ../SerialDSP/qcustomplot.cpp ../SerialDSP/qcustomplot.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o qcustomplot.o ../SerialDSP/qcustomplot.cpp
+
+SerialReader.o: ../SerialDSP/SerialReader/SerialReader.cpp ../SerialDSP/SerialReader/SerialReader.hpp \
+		../SerialDSP/SerialReader/logX.hpp
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o SerialReader.o ../SerialDSP/SerialReader/SerialReader.cpp
 
 moc_mainwindow.o: moc_mainwindow.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_mainwindow.o moc_mainwindow.cpp

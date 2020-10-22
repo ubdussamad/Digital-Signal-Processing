@@ -9,6 +9,14 @@
 
 #define LOG std::cout <<
 
+#define SHELL_BASH      1
+#define DEBUG           1
+#define ENABLE_WARNING  1
+#define ENABLE_INFO     1
+#define ENABLE_ERROR    1
+#define ENABLE_SPECIAL  1
+
+#include <SerialReader/SerialReader.hpp>
 #include <fifo.h>
 
 namespace Ui {
@@ -39,11 +47,14 @@ public:
     bool plotRangeChanged;
     QTimer *graphUpdateTimer;
     long int counter;
+    serialReader* sr;
+    bool init_flag;
 
 private slots:
     void on_btnPlot_clicked();
 
     void on_btnClr_clicked();
+
 
 private:
     Ui::MainWindow *ui;

@@ -7,7 +7,7 @@
 #endif
 
 #ifndef SHELL_BASH
-#define SHELL_BASH      0
+#define SHELL_BASH      1
 #endif
 
 #ifndef ENABLE_WARNING

@@ -13,7 +13,7 @@ QT_BEGIN_NAMESPACE
 template <class T>
 class fifoVector: public QVector<T> {
     public:
-        fifoVector (T defaultValue = 0 ,int bufferSize_ = 100);
+        fifoVector (T defaultValue = 0 ,int bufferSize_ = 300);
         void append_( const T& x);
     private:
         int bufferSize;
